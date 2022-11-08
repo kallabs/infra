@@ -1,4 +1,5 @@
 sso/api
+sso/web
 ui
 pgdata
 .env
