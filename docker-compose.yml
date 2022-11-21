@@ -3,12 +3,12 @@ version: "3.7"
 services:
   go-api:
     build:
-      context: ./api
+      context: ./sso/api
       target: debug
     env_file: .env
     restart: always
     volumes:
-      - ./api/src:/usr/src
+      - ./sso/api/src:/usr/src
     depends_on:
       - mariadb
     cap_add:
@@ -25,7 +25,6 @@ services:
     image: mariadb:10.9
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MARIADB_DATABASE: ${MARIADB_DATABASE}
       MARIADB_USER: ${MARIADB_USER}
       MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     expose:
@@ -33,7 +32,8 @@ services:
     ports:
       - '3307:3306'
     volumes:
-      - mariadb_data:/var/lib/mysql    
+      - mariadb_data:/var/lib/mysql  
+      - ./init:/docker-entrypoint-initdb.d   
     networks:
       - main_network
 
