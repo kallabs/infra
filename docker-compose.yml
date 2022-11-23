@@ -5,7 +5,22 @@ services:
     build:
       context: ./sso/api
       target: debug
-    env_file: .env
+    environment:
+      # go-api specific vars
+      SECRET_KEY: ${SECRET_KEY}
+      API_HOST: ${API_HOST}
+      API_PORT: ${API_PORT}
+      # database vars
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_PORT: ${MARIADB_PORT}
+      MARIADB_HOST: ${MARIADB_HOST}
+      MARIADB_DATABASE: sso
+      # smtp server vars
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
     restart: always
     volumes:
       - ./sso/api/src:/usr/src
@@ -34,6 +49,25 @@ services:
     volumes:
       - mariadb_data:/var/lib/mysql  
       - ./init:/docker-entrypoint-initdb.d   
+    networks:
+      - main_network
+
+  microblog-api:
+    build:
+      context: ./microblog/api
+    restart: always
+    environment:
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_HOST: ${MARIADB_HOST}
+      MARIADB_PORT: ${MARIADB_PORT}
+      MARIADB_DATABASE: microblog
+    volumes:
+      - ./microblog/api/app:/prj/src
+    depends_on:
+      - mariadb
+    ports:
+      - "8008:80"
     networks:
       - main_network
 
