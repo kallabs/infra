@@ -2,8 +2,7 @@ sso/api
 sso/web
 microblog/api
 microblog/web
-ui
-pgdata
+mariadb_init.d
 .env
 .DS_Store
 letsencrypt

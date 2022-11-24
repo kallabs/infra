@@ -11,11 +11,7 @@ services:
       API_HOST: ${API_HOST}
       API_PORT: ${API_PORT}
       # database vars
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_PORT: ${MARIADB_PORT}
-      MARIADB_HOST: ${MARIADB_HOST}
-      MARIADB_DATABASE: sso
+      DATABASE_URL: "${MARIADB_SSO_USER}:${MARIADB_SSO_PASSWORD}@mariadb/sso?parseTime=true"
       # smtp server vars
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -38,17 +34,16 @@ services:
 
   mariadb:
     image: mariadb:10.9
+    command: --default-authentication-plugin=mysql_native_password
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
     expose:
       - 3306
     ports:
       - '3307:3306'
     volumes:
       - mariadb_data:/var/lib/mysql  
-      - ./init:/docker-entrypoint-initdb.d   
+      - ./mariadb_init.d:/docker-entrypoint-initdb.d   
     networks:
       - main_network
 
@@ -57,13 +52,10 @@ services:
       context: ./microblog/api
     restart: always
     environment:
-      MARIADB_USER: ${MARIADB_USER}
-      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
-      MARIADB_HOST: ${MARIADB_HOST}
-      MARIADB_PORT: ${MARIADB_PORT}
-      MARIADB_DATABASE: microblog
+      DATABASE_URL: "mysql+aiomysql://${MARIADB_MICROBLOG_USER}:${MARIADB_MICROBLOG_PASSWORD}@mariadb:3306/microblog?charset=utf8mb4"
     volumes:
-      - ./microblog/api/app:/prj/src
+      - ./microblog/api/app:/prj/app
+      - ./microblog/api/alembic:/prj/alembic
     depends_on:
       - mariadb
     ports:
