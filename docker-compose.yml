@@ -8,10 +8,8 @@ services:
     environment:
       # go-api specific vars
       SECRET_KEY: ${SECRET_KEY}
-      API_HOST: ${API_HOST}
-      API_PORT: ${API_PORT}
       # database vars
-      DATABASE_URL: "${MARIADB_SSO_USER}:${MARIADB_SSO_PASSWORD}@mariadb/sso?parseTime=true"
+      DATABASE_URI: "${MARIADB_SSO_USER}:${MARIADB_SSO_PASSWORD}@tcp(mariadb)/sso?parseTime=true"
       # smtp server vars
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -52,6 +50,7 @@ services:
       context: ./microblog/api
     restart: always
     environment:
+      SECRET_KEY: ${SECRET_KEY}
       DATABASE_URL: "mysql+aiomysql://${MARIADB_MICROBLOG_USER}:${MARIADB_MICROBLOG_PASSWORD}@mariadb:3306/microblog?charset=utf8mb4"
     volumes:
       - ./microblog/api/src:/prj/src
@@ -64,8 +63,41 @@ services:
     networks:
       - main_network
 
+  elasticsearch:
+    image: elasticsearch:8.6.0
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    expose:
+      - 9200
+    restart: always
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - main_network
+  
+  kibana:
+    image: kibana:8.6.0
+    volumes:
+      - kibana-data:/usr/share/kibana/data
+    ports:
+     - 5601:5601
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - main_network
+
 volumes:
   mariadb_data:
+  elasticsearch-data:
+  kibana-data:
 
 networks:
   main_network:
