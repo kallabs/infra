@@ -1,0 +1,46 @@
+# DATABASE
+PG_ROOT_PASSWORD=root
+PG_USER=postgres
+PG_PASSWORD=postgres
+PG_HOST=postgres
+PG_PORT=5432
+
+# CERTIFICATES
+RSA_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----
+xxxxxx
+-----END PUBLIC KEY-----"
+
+RSA_PRIVATE_KEY = "-----BEGIN RSA PRIVATE KEY-----
+yyyyyy
+-----END RSA PRIVATE KEY-----"
+
+# <Identity Provider>
+SECRET_KEY=some-secret-token
+PG_IDP_DATABASE=idp_dev
+
+# smtp server vars
+SMTP_HOST=
+SMTP_PORT=
+SMTP_USERNAME=
+SMTP_PASSWORD=
+# </Identity Provider>
+
+# <Reading Plan>
+TELEGRAM_TOKEN=
+WEB_ADDR=0.0.0.0:3000
+PG_RP_DATABASE=reading_plan_dev
+
+# </Reading Plan>
+
+DATABASE_URL=postgres://postgres:postgres@localhost:5433/reading_plan_dev
+SA_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5433/reading_plan_dev
+
+# OpenID Credentials
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+FACEBOOK_CLIENT_ID=
+FACEBOOK_CLIENT_SECRET=

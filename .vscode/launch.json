@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug SSO API",
+            "name": "Debug IdP API",
             "type": "go",
             "request": "attach",
             "mode": "remote",
             "remotePath": "/usr/src",
             "port": 2346,
-            "cwd": "${workspaceFolder}/sso/api/src",
+            "cwd": "${workspaceFolder}/idp-api/src",
             "host": "127.0.0.1"
         }
     ]

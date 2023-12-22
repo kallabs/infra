@@ -1,8 +1,9 @@
-sso/api
-sso/web
+idp-api
+idp-web
 microblog/api
 microblog/web
-mariadb_init.d
+reading_plan_infra
+pg_initdb.d
 .env
 .DS_Store
 letsencrypt

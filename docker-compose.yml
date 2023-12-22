@@ -3,13 +3,15 @@ version: "3.7"
 services:
   go-api:
     build:
-      context: ./sso/api
+      context: ./idp-api
       target: debug
     environment:
       # go-api specific vars
       SECRET_KEY: ${SECRET_KEY}
+      RSA_PUBLIC_KEY: ${RSA_PUBLIC_KEY}
+      RSA_PRIVATE_KEY: ${RSA_PRIVATE_KEY}
       # database vars
-      DATABASE_URI: "${MARIADB_SSO_USER}:${MARIADB_SSO_PASSWORD}@tcp(mariadb)/sso?parseTime=true"
+      DATABASE_URI: "postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_IDP_DATABASE}?sslmode=disable"
       # smtp server vars
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -17,9 +19,9 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
     restart: always
     volumes:
-      - ./sso/api/src:/usr/src
+      - ./idp-api/src:/usr/src
     depends_on:
-      - mariadb
+      - postgres
     cap_add:
       - SYS_PTRACE
     security_opt:
@@ -30,74 +32,39 @@ services:
     networks:
       - main_network
 
-  mariadb:
-    image: mariadb:10.9
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+  scrapy-splash:
+    image: scrapinghub/splash
+    env_file:
+      - .env
+    ports:
+      - "8050:8050"
+    networks:
+      - main_network
+    
+  postgres:
+    image: postgres:16
     expose:
-      - 3306
+      - 5432
     ports:
-      - '3307:3306'
-    volumes:
-      - mariadb_data:/var/lib/mysql  
-      - ./mariadb_init.d:/docker-entrypoint-initdb.d   
-    networks:
-      - main_network
-
-  microblog-api:
-    build:
-      context: ./microblog/api
-    restart: always
+      - "5433:5432"
+    restart: unless-stopped
     environment:
-      SECRET_KEY: ${SECRET_KEY}
-      DATABASE_URL: "mysql+aiomysql://${MARIADB_MICROBLOG_USER}:${MARIADB_MICROBLOG_PASSWORD}@mariadb:3306/microblog?charset=utf8mb4"
+        POSTGRES_USER: ${PG_USER}
+        POSTGRES_PASSWORD: ${PG_PASSWORD}
+        POSTGRES_MULTIPLE_DATABASES: ${PG_IDP_DATABASE}, ${PG_RP_DATABASE}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
-      - ./microblog/api/src:/prj/src
-      - ./microblog/api/tests:/prj/tests
-      - ./microblog/api/alembic:/prj/alembic
-    depends_on:
-      - mariadb
-    ports:
-      - "8008:80"
-    networks:
-      - main_network
-
-  elasticsearch:
-    image: elasticsearch:8.6.0
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    expose:
-      - 9200
-    restart: always
-    environment:
-      - xpack.security.enabled=false
-      - discovery.type=single-node
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    networks:
-      - main_network
-  
-  kibana:
-    image: kibana:8.6.0
-    volumes:
-      - kibana-data:/usr/share/kibana/data
-    ports:
-     - 5601:5601
-    restart: always
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    depends_on:
-      - elasticsearch
+      - pgdata:/var/lib/postgresql/data
+      - ./pg_initdb.d/multiple-databases.sh:/docker-entrypoint-initdb.d/multiple-databases.sh
     networks:
       - main_network
 
 volumes:
-  mariadb_data:
-  elasticsearch-data:
-  kibana-data:
+  pgdata:
 
 networks:
   main_network:
